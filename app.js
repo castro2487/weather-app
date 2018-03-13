@@ -1,10 +1,35 @@
-const request = require("request");
+const yargs = require("yargs");
 
-request({
-    url:'https://maps.googleapis.com/maps/api/geocode/json?address=1301+lombard+st+philadelphia&key= AIzaSyA0qjtkFy_2KDkxz5hGKRr1-yAT3meHGFU',
-    json: true
-},(error, response, body) =>{
-    console.log(`Address: ${body.results[0].formatted_address}`);
-    console.log(`Lat: ${body.results[0].geometry.location.lat}`);
-    console.log(`Long: ${body.results[0].geometry.location.lng}`);    
+const geocode = require("./geocode/geocode");
+const weather = require("./weather/weather");
+
+const argv = yargs.options({
+      a:{
+          demand: true,
+          alias: 'address',
+          describe: 'Address for fetch weather for',
+          string: true
+        }   
+      })
+      .help()
+      .alias('help','h')  
+      .argv;
+
+geocode.geocodeAddress(argv.address, (errorMessage, results) => {
+  if(errorMessage){
+    console.log(errorMessage)
+  }else {
+    console.log(results.address)
+    
+    weather.getWeather(results.latitud, results.longitud, (errorMessage, weatherResults) => {
+      if(errorMessage){
+        console.log(errorMessage)
+      }else {
+        console.log(`Its currently ${weatherResults.temperature}. But it feels like ${weatherResults.apparentTemperature}`)
+      }
+    });
+  }
 });
+
+
+
